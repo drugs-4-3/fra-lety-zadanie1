@@ -1,4 +1,5 @@
 import javax.microedition.midlet.*;
+import javax.microedition.rms.RecordComparator;
 import javax.microedition.rms.RecordEnumeration;
 import javax.microedition.rms.RecordStore;
 import javax.microedition.rms.RecordStoreException;
@@ -17,10 +18,12 @@ public class MyMidlet extends MIDlet implements CommandListener {
 	private Command exit; 
 	private AddItem addItem;
 	private DisplayItem displayItem;
+	private DisplayItem displaySortedByStrengthItem;
 	private Image image;
 	private Form mainForm;
 	private Command addItemCommand;
 	private Command displayItemCommand;
+	private Command displaySortedByStrengthCommand;
 	static RecordStore recordStore;
 	
 	public MyMidlet() {
@@ -31,15 +34,18 @@ public class MyMidlet extends MIDlet implements CommandListener {
 		exit = new Command("Exit", Command.EXIT, 1);
 		addItemCommand = new Command("Add item", Command.ITEM, 1);
 		displayItemCommand = new Command("Display items", Command.ITEM, 1);
+		displaySortedByStrengthCommand = new Command("Display sorted", Command.ITEM, 1);
 		
 		addItem = new AddItem("Add Item", mainForm);
 		displayItem = new DisplayItem("Display items", mainForm, display);
+		displaySortedByStrengthItem = new DisplayItem("Display sorted", mainForm, display);
 		
 		mainForm.append(image);
 		
 		mainForm.addCommand(exit);
 		mainForm.addCommand(addItemCommand);
 		mainForm.addCommand(displayItemCommand);
+		mainForm.addCommand(displaySortedByStrengthCommand);
 		
 		mainForm.setCommandListener(this);
 		
@@ -78,19 +84,23 @@ public class MyMidlet extends MIDlet implements CommandListener {
 		}
 		else if (command == displayItemCommand) {
 			display.setCurrent(displayItem);
-			displayItems();
+			displayItems(new Comparator(), displayItem);
 		}
 		else if (command == exit) {
 			destroyApp(false);
 			notifyDestroyed();
 		}
+		else if (command == displaySortedByStrengthCommand) {
+			display.setCurrent(displaySortedByStrengthItem);
+			displayItems(new StrengthComparator(), displaySortedByStrengthItem);
+		}
 	}
 	
-	private void displayItems() {
+	private void displayItems(RecordComparator recordComparator, DisplayItem displayItem) {
 		RecordEnumeration iterator;
 		String calyTekst = "";
 		try {
-			iterator = recordStore.enumerateRecords(null, new Comparator(), false);
+			iterator = recordStore.enumerateRecords(null, recordComparator, false);
 			while(iterator.hasNextElement()) {
 				byte[] rekord = iterator.nextRecord();
 				String tekst = new String(rekord);
