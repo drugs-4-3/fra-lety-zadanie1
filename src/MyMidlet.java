@@ -1,4 +1,6 @@
 import javax.microedition.midlet.*;
+import javax.microedition.rms.RecordEnumeration;
+import javax.microedition.rms.RecordStore;
 import javax.microedition.rms.RecordStoreException;
 
 import java.awt.image.BufferedImage;
@@ -16,19 +18,33 @@ public class MyMidlet extends MIDlet implements CommandListener {
 	private AddItem addItem;
 	private DisplayItem displayItem;
 	private Image image;
+	private Form mainForm;
+	private Command addItemCommand;
+	private Command displayItemCommand;
+	static RecordStore recordStore;
 	
 	public MyMidlet() {
-		image = loadImage("/image.jpg");
-		exit = new Command("Exit", Command.EXIT, 1);
 		display = Display.getDisplay(this);
-		list = new List("Menu:", List.IMPLICIT); 
-		list.append("image", image);
-		list.append("Add Item",null);
-		list.append("Display Items",null);
-		list.addCommand(exit);	
-		list.setCommandListener(this);
-		addItem = new AddItem("Add Item", list);
-		displayItem = new DisplayItem("Display items", list, display);
+		image = loadImage("image.jpg");
+		mainForm = new Form("Main Form");
+		
+		exit = new Command("Exit", Command.EXIT, 1);
+		addItemCommand = new Command("Add item", Command.ITEM, 1);
+		displayItemCommand = new Command("Display items", Command.ITEM, 1);
+		
+		addItem = new AddItem("Add Item", mainForm);
+		displayItem = new DisplayItem("Display items", mainForm, display);
+		
+		mainForm.append(image);
+		
+		mainForm.addCommand(exit);
+		mainForm.addCommand(addItemCommand);
+		mainForm.addCommand(displayItemCommand);
+		
+		mainForm.setCommandListener(this);
+		
+		display.setCurrent(mainForm);
+		
 	}
 	
 	private Image loadImage(String source) {
@@ -41,6 +57,11 @@ public class MyMidlet extends MIDlet implements CommandListener {
 	
 	public void startApp() {
 		display.setCurrent(list);
+		try {
+			recordStore = RecordStore.openRecordStore("record store", true);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void pauseApp() {
@@ -52,20 +73,33 @@ public class MyMidlet extends MIDlet implements CommandListener {
 	}
 	
 	public void commandAction(Command command, Displayable displayable) {
-		if (command == List.SELECT_COMMAND) {
-			int selectedIndex = list.getSelectedIndex();
-			
-			if (selectedIndex == 0) {
-				display.setCurrent(addItem);
-			}
-			else if (selectedIndex == 1) {
-				display.setCurrent(displayItem);
-			}
+		if (command == addItemCommand) {
+			display.setCurrent(addItem);
+		}
+		else if (command == displayItemCommand) {
+			display.setCurrent(displayItem);
+			displayItems();
 		}
 		else if (command == exit) {
 			destroyApp(false);
 			notifyDestroyed();
 		}
+	}
+	
+	private void displayItems() {
+		RecordEnumeration iterator;
+		String calyTekst = "";
+		try {
+			iterator = recordStore.enumerateRecords(null, new Comparator(), false);
+			while(iterator.hasNextElement()) {
+				byte[] rekord = iterator.nextRecord();
+				String tekst = new String(rekord);
+				calyTekst += (tekst + "\n");
+			}
+		} catch(RecordStoreException ex) {
+			ex.printStackTrace();
+		}
+		displayItem.setString(calyTekst);
 	}
 	 
 	public static Display myDisplay() {

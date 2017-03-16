@@ -3,15 +3,17 @@ import javax.microedition.lcdui.CommandListener;
 import javax.microedition.lcdui.Display;
 import javax.microedition.lcdui.Displayable;
 import javax.microedition.lcdui.Form;
+import javax.microedition.lcdui.TextBox;
 
-public class DisplayItem extends Form implements CommandListener{
+public class DisplayItem extends TextBox implements CommandListener{
 
 	Command backCommand;
 	Displayable mainScreen;
 	Display display;
+	TextBox textBox;
 	
 	public DisplayItem(String title, Displayable mainScreen, Display display) {
-		super(title);
+		super("Display Item", "", 256, 0);
 		this.mainScreen = mainScreen;
 		this.display = display;
 		backCommand = new Command("Back", Command.EXIT, 1);
@@ -23,7 +25,6 @@ public class DisplayItem extends Form implements CommandListener{
 		if (c == backCommand) {
 			display.setCurrent(mainScreen);
 		}
-		
 	}
 
 	
